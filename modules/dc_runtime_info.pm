@@ -237,11 +237,12 @@ sub dc_runtime_info
                      {
                      $hpoweredoff++;
                      $hpoweredoff_out = $hpoweredoff_out . $host->name . "($host_state)" . $multiline;
-                     $actual_state = 1;
-                     $state = check_state($state, $actual_state);
+                     #$actual_state = 2;
+                     #$state = check_state($state, $actual_state);
                      }
                   }
    
+          $state = check_against_threshold($hpoweredoff);
           if ($subselect eq "all")
              {
              $output = $output . " - " . $hpoweredon . "/" . @$host_views . " Hosts powered on - ";
