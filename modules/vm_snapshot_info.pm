@@ -38,7 +38,7 @@ sub vm_snapshot_info
     foreach my $vm_view ( @{$vms} ) {
         my $vm_name     = $vm_view->{summary}->{config}->{name};
 
-        if (scalar @{$vm_view->{snapshot}} < 1 )
+        if (scalar @{$vm_view->{snapshot}->{rootSnapshotList}} < 1 )
             {
             return (0, 'No snapshots found. ');
             }
