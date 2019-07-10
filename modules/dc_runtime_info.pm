@@ -64,7 +64,7 @@ sub dc_runtime_info
     my $vc_yellow_cnt = 0;       # Vcenter yellow state counter
     my $vc_name;
 
-    my $true_sub_sel=1;          # Just a flag. To have only one return at the en
+    my $true_sub_sel=1;          # Just a flag. To have only one return at the end
                                  # we must ensure that we had a valid subselect. If
                                  # no subselect is given we select all
                                  # 0 -> existing subselect
@@ -544,7 +544,14 @@ sub dc_runtime_info
                         {
                         $guestToolsNotInstalled_cnt++;
                         $tools_out = $tools_out ."VM " . $vm->name . " Tools not installed." . $multiline;
-                        $actual_state = 1;
+                        if (defined($no_vmtools))
+                           {
+                           $actual_state = 0;
+                           }
+                        else
+                           {
+                           $actual_state = 1;
+                           }
                         $state = check_state($state, $actual_state);
                         }
                      }
@@ -783,6 +790,14 @@ sub dc_runtime_info
           $output = $issue_cnt . " config issues - " . $issues_ignored_cnt  . " config issues ignored" . $multiline . $issue_out;
           }
        $state = check_state($state, $actual_state);
+       }
+
+    if ($subselect eq "version")
+       {
+       $target_vcenter_view = Vim::get_service_content();
+       $output = $target_vcenter_view->about->fullName;
+       $state = 0;
+       return ($state, $output);
        }
 
     if ($true_sub_sel == 1)

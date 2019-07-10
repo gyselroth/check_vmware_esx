@@ -1,6 +1,6 @@
 sub host_runtime_info
     {
-    my ($host) = @_;
+    my ($host, $maintenance_mode_state) = @_;
     my $charging;
     my $summary;
     my $sensorname;
@@ -88,13 +88,13 @@ sub host_runtime_info
        exit 2;
        }
 
-    $host_view->update_view_data(['name', 'runtime', 'overallStatus', 'configIssue']);
+    $host_view->update_view_data(['name', 'runtime', 'overallStatus', 'configIssue', 'summary.config.product.fullName']);
     $runtime = $host_view->runtime;
 
     if ($runtime->inMaintenanceMode)
        {
        print "Notice: " . $host_view->name . " is in maintenance mode, check skipped\n";
-       exit 1;
+       exit $maintenance_mode_state;
        }
 
     if (($subselect eq "listvms") || ($subselect eq "all"))
@@ -227,7 +227,7 @@ sub host_runtime_info
           }
        }
 
-    if (($subselect eq "health") || ($subselect eq "all"))
+    if ((($subselect eq "health") || ($subselect eq "all")) && (not defined($ignorehealth)))
        {
        $true_sub_sel = 0;
        $OKCount = 0;
@@ -249,7 +249,7 @@ sub host_runtime_info
                      # Ejection seat for not running CIM Server
                      if ($actual_state == 3)
                         {
-                        print "Critical! No result from CIM server.CIM server is probably not running or not running correctly! Please restart!\n";
+                        print "Critical! No result from CIM server regarding health state. CIM server is probably not running or not running correctly! Please restart!\n";
                         exit 2;
                         }
                         
@@ -729,6 +729,13 @@ sub host_runtime_info
        return ($state, $output);
        }
 
+
+    if ($subselect eq "version")
+       {
+       $output = $host_view->get_property('summary.config.product.fullName');
+       $state = 0;
+       return ($state, $output);
+       }
 
     if (($subselect eq "issues") || ($subselect eq "all"))
        {

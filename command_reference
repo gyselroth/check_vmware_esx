@@ -1,5 +1,5 @@
 
-check_vmware_esx.pl,Version 0.9.23
+check_vmware_esx.pl,Version 1.2.1
 
 This vmware Infrastructure monitoring plugin is free software, and comes with ABSOLUTELY NO WARRANTY.
 It may be used, redistributed and/or modified under the terms of the GNU General Public Licence 
@@ -17,6 +17,16 @@ General options:
     --ignore_unknown                 Sometimes 3 (unknown) is returned from a component.
                                      But the check itself is ok.
                                      With this option the plugin will return OK (0) instead of UNKNOWN (3).
+    --maintenance_mode_state         Set status in case ESX host is in maintenance mode.
+
+                                     Possible values are:
+                                     OK or ok
+                                     CRITICAL or critical or CRIT or crit
+                                     WARNING or warning or WARN or warn
+
+                                     Default is UNKNOWN because you do not know the real state.
+                                     Values are case insensitive.
+
     --ignore_warning                 Sometimes 2 (warning) is returned from a component.
                                      But the check itself is ok (from an operator view).
                                      With this option the plugin will return OK (0) instead of WARNING (1).
@@ -43,12 +53,6 @@ Options for authentication:
                                      Multiple sessions are possible using different session file names. To form different
                                      session file names the default name is enhenced by the value you set with
                                      --sessionfile.
-
-                                     NOTICE! All checks using the same session are serialized. So a lot of checks
-                                     using only one session can cause timeouts. In this case you should enhence the
-                                     number of sessions by using --sessionfile in the command definition and define
-                                     the value in the service definition command as an extra argument so it can be used
-                                     in the command definition as $ARGn$.
      --sessionfile=<sessionfile>     (Optional).Session file name enhancement.
      --sessionfiledir=<directory>    (Optional).If this option is set a path different from the path stored in
                                      $sessionfile_dir_def, which is defined in the plugin will be used.
@@ -232,12 +236,45 @@ or
                                     a filter to file out the <br>. A sed oneliner like the following
                                     will do the job: sed 's/<[^<>]*>//g'
     --alertonly                     List only alerting VMs. Important here to avoid masses of data.
+or
+-s, --subselect=version             Full version string of this vCenter installation.
 
 SOAP API:
 ---------
 
 -S, --select=soap                   simple check to verify a successfull connection
                                     to VMWare SOAP API.
+
+Snapshots
+-------------
+-S, --select=snapshots              List vm's wich have snapshots older or bigger than a certain threshold
+-w, --warning=<threshold>           Warning threshold.
+-c, --critical=<threshold>          Critical threshold.
+-B, --exclude=<black_list>          Blacklist VMs.
+-W, --include=<white_list>          Whitelist VMs.
+
+                                    Use blacklist OR(!) whitelist. Using both in one statement
+                                    is not allowed.
+
+    --isregexp                      Whether to treat blacklist and whitelist as regexp
+    --listall                       List all VMs with all snapshots.
+    --poweredonly                   List only VMs which are powered on.
+    --multiline                     Multiline output in overview. This mean technically that
+                                    a multiline output uses a HTML <br> for the GUI instead of
+                                    Be aware that your messing connections (email, SMS...) must use
+                                    a filter to file out the <br>. A sed oneliner like the following
+                                    will do the job: sed 's/<[^<>]*>//g'
+or with
+-s, --subselect=age                 Shows age of snapshots in days.
+or
+-s, --subselect=count               Counts the number of snapshots of VMs.
+
+License
+-------------
+-S, --select=license                Checks the currently installed license. If in Evaluation Mode the
+                                    remainig evaluation time will be displayed
+
+    --hidekey                       Hide license key from output.
 
 Monitoring the vmware host:
 ===========================
@@ -343,6 +380,15 @@ or
 -s, --subselect=nic                 Check all active NICs.
 -B, --exclude=<black_list>          Blacklist NICs.
     --isregexp                      Whether to treat blacklist as regexp
+
+    --unplugged_nics_state          Sets status for unplugged nics
+
+                                    Possible values are:
+                                    OK or ok
+                                    CRITICAL or critical or CRIT or crit
+                                    WARNING or warning or WARN or warn
+
+                                    Default is WARNING. Values are case insensitive.
 
 Volumes:
 --------
@@ -460,6 +506,9 @@ Runtime info:
 -S, --select=runtime                Shows runtime info. Used without -s show all runtime info:
                                     VMs, overall status, connection state, health, storagehealth, temperature
                                     and sensor are represented as one value and without thresholds.
+    --ignore_health                 ignore health issues when requesting runtime all status.
+                                    Sometimes helpful with unsupported hardware. Make sure to
+                                    monitor hardware separately!
 or with
 -s, --subselect=con                 Shows connection state.
 or
@@ -539,6 +588,8 @@ or
                                     Be aware that your messing connections (email, SMS...) must use
                                     a filter to file out the <br>. A sed oneliner like the following
                                     will do the job: sed 's/<[^<>]*>//g'
+or
+-s, --subselect=version             Full version string of this ESXi host installation.
 
 Storage info:
 -------------
@@ -621,6 +672,37 @@ SOAP API:
 
 -S, --select=soap                   Simple check to verify a successfull connection
                                     to VMWare SOAP API.
+
+Snapshots
+-------------
+-S, --select=snapshots              List vm's wich have snapshots older or bigger than a certain threshold
+-w, --warning=<threshold>           Warning threshold.
+-c, --critical=<threshold>          Critical threshold.
+-B, --exclude=<black_list>          Blacklist VMs.
+-W, --include=<white_list>          Whitelist VMs.
+
+                                    Use blacklist OR(!) whitelist. Using both in one statement
+                                    is not allowed.
+
+    --isregexp                      Whether to treat blacklist and whitelist as regexp
+    --listall                       List all VMs with all snapshots.
+    --poweredonly                   List only VMs which are powered on.
+    --multiline                     Multiline output in overview. This mean technically that
+                                    a multiline output uses a HTML <br> for the GUI instead of
+                                    Be aware that your messing connections (email, SMS...) must use
+                                    a filter to file out the <br>. A sed oneliner like the following
+                                    will do the job: sed 's/<[^<>]*>//g'
+or with
+-s, --subselect=age                 Shows age of snapshots in days.
+or
+-s, --subselect=count               Counts the number of snapshots of VMs.
+
+License
+-------------
+-S, --select=license                Checks the currently installed license. If in Evaluation Mode the
+                                    remainig evaluation time will be displayed
+
+    --hidekey                       Hide license key from output.
 
 Monitoring a virtual machine via vmware datacenter or vmware host:
 ==================================================================
@@ -786,7 +868,16 @@ or with
                                     - VMware tools are installed, and the version is known to be too new to
                                       work correctly with this virtual machine. (Critical)
                                     - VMware tools are installed, but the version is too old. (Warning)
-                                    - VMware tools are installed, but it is not managed by VMWare. (Critical)
+                                    - VMware tools are installed, but it is not managed by VMWare. (Warning).
+                                      The error code of this message can be switched from "warning" to "ok"
+                                      using --open_vm_tools_ok (See below).
+
+     --open_vm_tools_ok             Set check to "ok" instead of "unknown" when tools are not managed by
+                                    Vmware like tools  OpenVMtools.
+
+     --no_vm_tools_ok               Set check to "ok" instead of "warning" when no tools are installed.
+                                    For some reasons it maybe ok to run virtual machines without tools.
+
 or with
  -s, --subselect=issues             All issues for the host
      --multiline                    Multiline output in overview. This mean technically that

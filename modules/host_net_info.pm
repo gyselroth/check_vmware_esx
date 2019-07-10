@@ -3,7 +3,7 @@
 
 sub host_net_info
     {
-    my ($host) = @_;
+    my ($host, $maintenance_mode_state, $unplugged_nics_state) = @_;
     my $state = 0;
     my $value;
     my $output;
@@ -40,7 +40,7 @@ sub host_net_info
           }
        }
 
-    $values = return_host_performance_values($host, 'net', ('usage.average', 'received.average', 'transmitted.average'));
+    $values = return_host_performance_values($host, $maintenance_mode_state, 'net', ('usage.average', 'received.average', 'transmitted.average'));
 
 
     if (($subselect eq "usage") || ($subselect eq "all"))
@@ -50,16 +50,17 @@ sub host_net_info
        if (defined($values))
           {
           $value = simplify_number(convert_number($$values[0][0]->value));
+          $perfvalue = $value * 1024;
           if ($subselect eq "all")
              {
              $output = "net usage=" . $value . " KBps";
-             $perfdata = "\'net_usage\'=" . $value . ";". $perf_thresholds . ";;";
+             $perfdata = "\'net_usage\'=" . $perfvalue . "B;". $perf_thresholds . ";;";
              }
           else
              {
              $actual_state = check_against_threshold($value);
              $output = "net usage=" . $value . " KBps";
-             $perfdata = "\'net_usage\'=" . $value . ";" . $perf_thresholds . ";;";
+             $perfdata = "\'net_usage\'=" . $perfvalue . "B;" . $perf_thresholds . ";;";
              $state = check_state($state, $actual_state);
              }
           }
@@ -77,16 +78,17 @@ sub host_net_info
        if (defined($values))
           {
           $value = simplify_number(convert_number($$values[0][1]->value));
+          $perfvalue = $value * 1024;
           if ($subselect eq "all")
              {
              $output = $output . " net receive=" . $value . " KBps";
-             $perfdata = $perfdata . " \'net_receive\'=" . $value . ";" . $perf_thresholds . ";;";
+             $perfdata = $perfdata . " \'net_receive\'=" . $perfvalue . "B;" . $perf_thresholds . ";;";
              }
           else
              {
              $actual_state = check_against_threshold($value);
              $output = "net receive=" . $value . " KBps";
-             $perfdata = "\'net_receive\'=" . $value . ";" . $perf_thresholds . ";;";
+             $perfdata = "\'net_receive\'=" . $perfvalue . "B;" . $perf_thresholds . ";;";
              $state = check_state($state, $actual_state);
              }
           }
@@ -113,16 +115,17 @@ sub host_net_info
        if (defined($values))
           {
           $value = simplify_number(convert_number($$values[0][2]->value));
+          $perfvalue = $value * 1024;
           if ($subselect eq "all")
              {
              $output =$output . ", net send=" . $value . " KBps"; 
-             $perfdata = $perfdata . " \'net_send\'=" . $value . ";" . $perf_thresholds . ";;";
+             $perfdata = $perfdata . " \'net_send\'=" . $perfvalue . "B;" . $perf_thresholds . ";;";
              }
           else
              {
              $actual_state = check_against_threshold($value);
              $output = "net send=" . $value . " KBps"; 
-             $perfdata = "\'net_send\'=" . $value . ";" . $perf_thresholds . ";;";
+             $perfdata = "\'net_send\'=" . $perfvalue . "B;" . $perf_thresholds . ";;";
              $state = check_against_threshold($value);
              }
           }
@@ -157,7 +160,7 @@ sub host_net_info
        if (uc($host_view->get_property('runtime.inMaintenanceMode')) eq "TRUE")
           {
           print "Notice: " . $host_view->name . " is in maintenance mode, check skipped\n";
-          exit 0;
+          exit $maintenance_mode_state;
           }
  
        $network_system = Vim::get_view(mo_ref => $host_view->get_property('configManager.networkSystem') , properties => ['networkInfo']);
@@ -220,9 +223,18 @@ sub host_net_info
                                         {
                                         $output_nic = $output_nic . ", ";
                                         }
-                                     $output_nic = $output_nic . $multiline . $NIC{$nic_key}->device . " is unplugged";
-                                     $state = 1;
-                                     $BadCount++;
+                                     if ($unplugged_nics_state == 0)
+                                        {
+                                        $output_nic = $output_nic . $multiline . $NIC{$nic_key}->device . " is unplugged but state is marked as ok.";
+                                        $state = $unplugged_nics_state;
+                                        $OKCount++;
+                                        }
+                                     else
+                                        {
+                                        $output_nic = $output_nic . $multiline . $NIC{$nic_key}->device . " is unplugged";
+                                        $state = $unplugged_nics_state;
+                                        $BadCount++;
+                                        }
                                      }
                                   else
                                      {

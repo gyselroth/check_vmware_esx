@@ -3,7 +3,7 @@ sub vm_runtime_info
     my ($vmname) = @_;
     my $state = 0;
     my $output = " ";
-    my $runtime;                 # A reference to the runime view.
+    my $runtime;                 # A reference to the runtime view.
     my $vm_connectionState;      # Holds the vm connection state. It is shorter than
                                  # $runtime->connectionState->val in the code.
     my $vm_guestState;           # Holds the vm guest state. It is shorter than
@@ -13,7 +13,7 @@ sub vm_runtime_info
     my $issue_cnt = 0;           # Counter for issues
     my $issue_out = '';          # Temporary output in the issue section
     my $actual_state;            # Hold the actual state for to be compared
-    my $true_sub_sel=1;          # Just a flag. To have only one return at the en
+    my $true_sub_sel=1;          # Just a flag. To have only one return at the end
                                  # we must ensure that we had a valid subselect. If
                                  # no subselect is given we select all
                                  # 0 -> existing subselect
@@ -262,7 +262,14 @@ sub vm_runtime_info
                    if ($vm_view->guest->toolsVersionStatus eq "guestToolsUnmanaged")
                       {
                       $tools_out = "VMware Tools are installed and running, but not managed by VMWare. ";
-                      $actual_state = 2;
+                      if (defined($openvmtools))
+                         {
+                         $actual_state = 0;
+                         }
+                      else
+                         {
+                         $actual_state = 1;
+                         }
                       }
                    }
                 else
@@ -288,7 +295,14 @@ sub vm_runtime_info
           else
              {
              $tools_out = "VMware tools not installed.";
-             $actual_state = 1;
+             if (defined($no_vmtools))
+                {
+                $actual_state = 0;
+                }
+             else
+                {
+                $actual_state = 1;
+                }
              }
           }
        else

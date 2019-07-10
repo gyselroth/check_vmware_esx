@@ -4,9 +4,30 @@
 #
 # License: GPL
 # This plugin is a forked by Martin Fuerstenau from the original one from op5
+#
 # Copyright (c) 2008 op5 AB
-# Author: Kostyantyn Hushchyn <dev@op5.com>
-# Contributor(s): Patrick Müller, Jeremy Martin, Eric Jonsson, stumpr, John Cavanaugh, Libor Klepac, maikmayers, Steffen Poulsen, Mark Elliott, simeg, sebastien.prudhomme, Raphael Schitz
+# Original author: Kostyantyn Hushchyn <dev@op5.com>
+# Contributor(s):
+#   Patrick M�ller
+#   Jeremy Martin
+#   Eric Jonsson
+#   stumpr
+#   John Cavanaugh
+#   Libor Klepac
+#   maikmayers
+#   Steffen Poulsen
+#   Mark Elliott
+#   Simon Meggle
+#   Sebastien Prudhomme
+#   Raphael Schitz
+#   Markus Frosch
+#   Michael Friedrich
+#   Sven Nierlein
+#   Gerhard Lausser
+#   Danijel Tasov
+#   6uellerBpanda
+#   Ricardo Bartels
+#   Claudio Kuenzler
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 as
@@ -43,7 +64,7 @@
 #            }
 #            $perfdata = $perfdata . " adapters=" . $count . ";"$perf_thresholds . ";;";
 #
-#           # M.Fuerstenau - changed the output a little bit 
+#           # M.Fuerstenau - changed the output a little bit
 #           $output .= $count . " of " . @{$storage->storageDeviceInfo->hostBusAdapter} . " defined/possible adapters online, ";
 #
 # - 30 Mar 2012 M.Fuerstenau
@@ -167,14 +188,14 @@
 #
 #   General statement for all changes done by me:
 #
-#   Nagios, Icingia etc. are tools for
+#   Nagios, Icinga etc. are tools for
 #
 #   a) Alarming. That means checking values against thresholds (internal or handed over)
 #   b) Collecting performance data. These data, collected with the checks, like network traffic, cpu usage or so should be
 #      interpretable without a lot of other data.
 #
 #   So as a conclusion collecting historic performance data collected by a monitored system should not be done using Nagios,
-#   pnp4nagios etc.. It should be interpreted with the approriate admin tools of the relevant system. For vmware it means use
+#   pnp4nagios etc.. It should be interpreted with the appropriate admin tools of the relevant system. For vmware it means use
 #   the (web)client for this and not Nagios. Same for performance counters not self explaining.
 #
 #   Example:
@@ -250,7 +271,7 @@
 #     with return
 #
 # - 19 Mar 2013 M.Fuerstenau version 0.7.16
-#   - Reformatted and cleaned up a lot of code. Variable definitions are now at the beginning of each 
+#   - Reformatted and cleaned up a lot of code. Variable definitions are now at the beginning of each
 #     subroutine instead of defining them "on the fly" as needed with "my". Especially using "my" for
 #     definition in a loop is not goog coding style
 #
@@ -263,9 +284,9 @@
 #   - Removed timeshift, interval and maxsamples. If needed use original program from op5.
 #
 # - 25 Mar 2013 M.Fuerstenau version 0.7.19
-#   - Removed $defperfargs because no values will be handled over. Only performance check that needed another 
+#   - Removed $defperfargs because no values will be handled over. Only performance check that needed another
 #     another sampling invel was cluster. This is now fix with 3000.
-#     
+#
 # - 11 Apr 2013 M.Fuerstenau version 0.7.20
 #   - Rewritten and cleaned subroutine host_mem_info. Removed $value1 - $value5. Stepwise completion of $output makes
 #     this unsophisticated construct obsolete.
@@ -279,7 +300,7 @@
 #     this unsophisticated construct obsolete.
 #
 # - 24 Apr 2013 M.Fuerstenau version 0.7.22
-#   - Because there is a lot of different performance counters for memory in vmware we ave changed something to be 
+#   - Because there is a lot of different performance counters for memory in vmware we ave changed something to be
 #     more specific.
 #     - Enhenced explanations in help.
 #     - Changed swap to swapUSED in host_mem_info().
@@ -287,10 +308,10 @@
 #     - Removed overall in host_mem_info(). After reading the documentation carefully the addition of consumed.average + overhead.average
 #       seems a little bit senseless because consumed.average includes overhead.average.
 #     - Changed usageMB to CONSUMED in vm_mem_info(). Same for variables.
-#     - Removed swapIN and swapOUT in vm_mem_info(). Not so sensefull for Nagios alerting because it is hard to find 
+#     - Removed swapIN and swapOUT in vm_mem_info(). Not so sensefull for Nagios alerting because it is hard to find
 #       valid thresholds
 #     - Removed swap in vm_mem_info(). From the vmware documentation:
-#       "Current amount of guest physical memory swapped out to the virtual machine's swap file by the VMkernel. Swapped 
+#       "Current amount of guest physical memory swapped out to the virtual machine's swap file by the VMkernel. Swapped
 #        memory stays on disk until the virtual machine needs it. This statistic refers to VMkernel swapping and not
 #        to guest OS swapping. swapped = swapin + swapout"
 #
@@ -298,9 +319,9 @@
 #       it is not possible to do any alerting here because (especially with vmotion) you have no thresholds.
 #     - Removed OVERHEAD in vm_mem_info(). From the vmware documentation:
 #       "Amount of machine memory used by the VMkernel to run the virtual machine."
-#       So using this we have a useless information about a virtual machine because we have no valid context and we 
+#       So using this we have a useless information about a virtual machine because we have no valid context and we
 #       have no valid thresholds. More important is overhead for the host system. And if we are running in problems here
-#       we have to look which machine must be moved to another host. 
+#       we have to look which machine must be moved to another host.
 #     - As a result of this overall in vm_mem_info() makes no sense.
 #
 # - 25 Apr 2013 M.Fuerstenau version 0.7.23
@@ -344,8 +365,8 @@
 #     With the variable set to all we can decide wether to leave the function after a subselect section
 #     has been processed or stay and enhance $output and $perfdata. So the code is more clear and
 #     has nearly half the lines of code left.
-#   - Removed KBps as unit in performance data. This unit is not specified in the plugin developer 
-#     guide. Performance data is now just a number without a unit. Adding the unit has to be done 
+#   - Removed KBps as unit in performance data. This unit is not specified in the plugin developer
+#     guide. Performance data is now just a number without a unit. Adding the unit has to be done
 #     in the graphing tool (like pnp4nagios).
 #   - Removed the number of NICs as performance data. A little bit senseless to have those data here.
 #
@@ -373,8 +394,8 @@
 #
 # - 11 Jun 2013 M.Fuerstenau version 0.7.31
 #   - Changed select option for datastore from vmfs to volumes because we will have volumes on nfs AND vmfs on local or
-#     SAN disks. 
-#   - Changed output for datastore check to use the option --multiline. This will add a \n (unset -> default) for 
+#     SAN disks.
+#   - Changed output for datastore check to use the option --multiline. This will add a \n (unset -> default) for
 #     every line of output. If set it will use HTML tag <br>.
 #
 #     The option --multiline sets a <br> tag instead of \n. This must be filtered out
@@ -427,10 +448,10 @@
 # - 24 Jun 2013 M.Fuerstenau version 0.7.36
 #   - Changed all .= (for example $output .= $xxx.....) to = $var... (for example $output = $output . $xxx...). .= is shorter
 #     but the longer form of notification is better readable. The probability of overlooking the dot (especially for older eyes
-#     like mine) is smaller. 
+#     like mine) is smaller.
 #
 # - 07 Aug 2013 M.Fuerstenau version 0.8.0
-#   - Changed "eval { require VMware::VIRuntime };" to "use VMware::VIRuntime;".  The eval construct 
+#   - Changed "eval { require VMware::VIRuntime };" to "use VMware::VIRuntime;".  The eval construct
 #     made no sense. If the module isn't available the program will crash with a compile error.
 #
 #   - Removed own subroutine format_uptime() only used by host_uptime_info(). The complete work of this function
@@ -441,13 +462,13 @@
 #        $output =  "uptime=" . duration_exact($value);
 #
 #   - Removed perfdata from host_uptime_info(). Perfdata for uptime seems senseless. Same for threshold.
-#   - Started modularization of the plugin. The reason is that it is much more easier to 
+#   - Started modularization of the plugin. The reason is that it is much more easier to
 #     patch modules than to patch a large file.
 #   - Variables used in that functions which are defined on the top level
 #     with "my" must now be defined with "our".
 #
 #     BEWARE! Using "our" with unknown modules can lead to curious results if
-#     in this functions are variables with the same name. But in this 
+#     in this functions are variables with the same name. But in this
 #     case it is no risk because the modules are not generic. We have only
 #     broken the plugin in handy pieces.
 #
@@ -501,8 +522,8 @@
 #       can contain upper and lower letters. Fixed.
 #     - datastore_volumes_info.pm had  my ($datastore, $subselect) = @_; as second line
 #       This was incorrect because "global" variables (defined as our in the main program)
-#       are not handled over via function call. (Yes - may be handling over maybe more ok 
-#       in the sense of structured programming. But really - does handling over and giving back 
+#       are not handled over via function call. (Yes - may be handling over maybe more ok
+#       in the sense of structured programming. But really - does handling over and giving back
 #       a variable makes the code so much clearer? More a kind of philosophy :-)) )
 #
 # - 27 Oct 2013 M.Fuerstenau version 0.8.5
@@ -522,7 +543,7 @@
 #     Affected subroutine:
 #     host_net_info().
 #   - Bug fixed in generic_performance_values(). Unfortunaltely I had moved
-#     my @values = () to main function. Therefore instead of containing a 
+#     my @values = () to main function. Therefore instead of containing a
 #     new array reference with each run the new references were added to the array
 #     but only the first one was processed. Thanks to Timo Weber for discovering this bug.
 #
@@ -559,7 +580,7 @@
 #       notResponding  VirtualCenter is not receiving heartbeats from the server
 #                    . The state automatically changes to connected once
 #                      heartbeats are received again. This state is typically
-#                      used to trigger an alarm on the host. 
+#                      used to trigger an alarm on the host.
 #
 #       In the past the presset of returncode was 2. It was set to 0 in case of a
 #       connected. But disconnected doesn' mean a critical error. It means main-
@@ -567,7 +588,7 @@
 #       notResonding will cause a 2 for critical.
 #     - Kicked out maintenance info in runtime summary and as subselect. In the beginning of
 #       the function is a check for maintenance. In the original program in this case
-#       the program will be left with a die which caused a red alert in Nagios. Now an info 
+#       the program will be left with a die which caused a red alert in Nagios. Now an info
 #       is displayed and a return code of 1 (warning) is deliverd because a maintenance is
 #       regular work. Although monitoring should take notice of it. Therefore a warning.
 #       Therefor the maintenence check in the else tree was scrap. It was never reached.
@@ -625,7 +646,7 @@
 #
 #     if (uc($host_view->get_property('runtime.inMaintenanceMode')) eq "TRUE")
 #
-#     This is quite stupid. runtime.inMaintenanceMode is xsd:boolean wich means true or false (in 
+#     This is quite stupid. runtime.inMaintenanceMode is xsd:boolean wich means true or false (in
 #     lower cas letters. So a uc() make no sense. Removed
 #
 #   - Bypass SSL certificate validation - thanks Robert Karliczek for the hint
@@ -661,7 +682,7 @@
 #     - Parameter usedspace was ignored on volume checks because a local variable defined with my instead of a more global
 #       one. Changed it from my to our fixed it. Thanks to dgoetz for reporting (and fixing) this.
 #     - Capacity is now displayed and deliverd as perfdata
-#   - Main selection - GetOptions. Unce upon a time I had kicked out $timeout unintended. Fixed now. Thanks to 
+#   - Main selection - GetOptions. Unce upon a time I had kicked out $timeout unintended. Fixed now. Thanks to
 #     Andreas Daubner for the hint.
 #
 # - 12 Dec 2013 M.Fuerstenau version 0.8.17
@@ -683,10 +704,10 @@
 #     - Added working blacklist/whitelist.
 #       - Blacklist: blacklisted adapters will not be displayed.
 #       - Whitelist: only whitelisted adapters will be displayed.
-#     - Removed perfdata for the number of hostbusadapters. These perfdata was absolutely senseless.     
+#     - Removed perfdata for the number of hostbusadapters. These perfdata was absolutely senseless.
 #     - Status for hostbusadapters was not checked correctly. The check was only done for online and unknown but NOT(!!)
 #       for offline and unbound.
-#     - LUN states were not correct. UNKNOWN is not a valid state. Not all states different from unknown are 
+#     - LUN states were not correct. UNKNOWN is not a valid state. Not all states different from unknown are
 #       supposed to be critical. From the docs:
 #
 #       degraded             One or more paths to the LUN are down, but I/O is still possible. Further
@@ -706,7 +727,7 @@
 #       displayed. So using the freely configurable DisplayName is senseless. The device name is formed from the
 #       path (/vmfs/devices/disks/) followed by the canonical name. So it is either senseless.
 #     - The real numeric LUN number wasn'nt display. Fixed. Output is now LUN, canonical name, everything from
-#       the display name not equal canonical name and status.  
+#       the display name not equal canonical name and status.
 #     - Complete rewrite of the paths part. Only the state of the multipath was checked but not the state of the
 #       paths. So a multipath can be "Active" which is ok but the second line is dead. So if the active path becomes
 #       dead the failover won't work.There must be an alarm for a standby path too. It is now grouped in the output.
@@ -720,7 +741,7 @@
 #       poweredOn => UP
 #       poweredOff => DOWN
 #       suspended => SUSPENDED
-#       This suggested a machine state but it is only a powerstate. All other than UP caused a critical. But this is 
+#       This suggested a machine state but it is only a powerstate. All other than UP caused a critical. But this is
 #       not true. A power off machine can also be ok. But to be sure that it is noticed we will have a warning for
 #       powerd off and suspended
 #     - Perfdata changed.
@@ -740,7 +761,7 @@
 #       poweredOn => UP
 #       poweredOff => DOWN
 #       suspended => SUSPENDED
-#       This suggested a machine state but it is only a powerstate. All other than UP caused a critical. But this is 
+#       This suggested a machine state but it is only a powerstate. All other than UP caused a critical. But this is
 #       not true. A power off machine can also be ok. But to be sure that it is noticed we will have a warning for
 #       powerd off and suspended
 #     - Changed guest to gueststate. This is more descriptive.
@@ -836,7 +857,7 @@
 #       - Added --multiline here
 #     - listhosts
 #       - %host_state_strings was mostly nonsense. The mapped poser states from
-#         for virtual machines were used. Hash removed. Using now the orginal 
+#         for virtual machines were used. Hash removed. Using now the orginal
 #         power states from the system (from the docs):
 #         - poweredOff -> The host was specifically powered off by the user
 #                         through VirtualCenter. This state is not a certain
@@ -852,7 +873,7 @@
 #                         to power off.
 #         - unknown    -> If the host is disconnected, or notResponding, we can
 #                         not possibly have knowledge of its power state. Hence,
-#                         the host is marked as unknown. 
+#                         the host is marked as unknown.
 #       - Added working blacklist/whitelist with the ability to use regular
 #         expressions
 #       - Added --alertonly here
@@ -971,17 +992,17 @@
 #     same PID as before. Unfortunately Nagios sends a SIGINT or SIGTERM to the plugins. This causes the plugin
 #     to terminate without removing the lockfile.
 #     - So we have to catch several signals now
-#       - SIGINT and SIGTERM. One of this will be send from Nagios 
+#       - SIGINT and SIGTERM. One of this will be send from Nagios
 #       - SIGALRM. Caused by alarm(). Now with output usable in Nagios.
 #     - Instead of generating an empty file as lock file we write the process identifier of the running plugin
-#       process into the lock file. If a session crashes for some reason an a lock file is left we are in a 
+#       process into the lock file. If a session crashes for some reason an a lock file is left we are in a
 #       situation where signal processing won't help. But here the next run of the plugin reads the PID and checks
 #       for the process. If there is no process anymore it will remove the lock file and create a new one.
 #       Thanks to Simon Meggle, Consol, for the idea.
 #   - Removed "die" for opening the authfile or the session lock file with an unless construct. The plugin will
 #     report an "understandable" message to the monitor instead of causing an internal error code.
 #   - vm_cpu_info() and host_cpu_info()
-#     - Removed threshold for ready and wait. Therefore thresholds are no possible 
+#     - Removed threshold for ready and wait. Therefore thresholds are no possible
 #       without subselect.
 #
 # - 26 Feb 2014 M.Fuerstenau version 0.9.10
@@ -1054,7 +1075,7 @@
 #       when also doing a check with -S runtime -s storagehealth for the same
 #       host.
 #   - dc_runtime_info()
-#     - changed 
+#     - changed
 #       if (($subselect eq "listcluster") || ($subselect eq "all"))
 #       to
 #       if (($subselect =~ m/listcluster.*$/) || ($subselect eq "all"))
@@ -1075,7 +1096,7 @@
 #
 # - 20 Jul 2014 M.Fuerstenau version 0.9.17
 #   - Removing the last multiline character (\n or <br>) was moved
-#     from several subroutines to the main exit in check_vmware_esx.pl. 
+#     from several subroutines to the main exit in check_vmware_esx.pl.
 #     This was based this was implemented based on a proposal of Dietmar Eberth
 #     Affected subroutines:
 #     - vm_runtime_info()
@@ -1084,13 +1105,13 @@
 #     - dc_runtime_info()
 #     -datastore_volumes_info()
 #   - Fixed a bug on line 139 and 172. Thanks for fixing it to Dietmar Eberth.
-#     - Instead of 
-#     
+#     - Instead of
+#
 #       if ( $state >= 0 )
 #          {
 #          $alertcnt++;
 #          }
-#         
+#
 #       it must be:
 #
 #       if ( $alertcnt > 0 )
@@ -1103,7 +1124,7 @@
 #     to Dietmar Eberth.
 #
 # - 21 Jul 2014 M.Fuerstenau version 0.9.17a
-#   - Bugfix line 139 and 172 (now 140 and 173). It must be 
+#   - Bugfix line 139 and 172 (now 140 and 173). It must be
 #
 #     if ( $actual_state > 0 )
 #
@@ -1112,21 +1133,21 @@
 #     if ( $alertcnt > 0
 #
 # - 25 Jul 2014 M.Fuerstenau version 0.9.18
-#   - New option --perf_free_space for checking volumes. It must be used 
-#     with --usedspace. In versions prior to 0.9.18 perfdata was always 
+#   - New option --perf_free_space for checking volumes. It must be used
+#     with --usedspace. In versions prior to 0.9.18 perfdata was always
 #     deliverd as free space even if --usedspace was selected. From 0.9.18
 #     on when using --usedspace perfdata is recorded as used space. To prevent
 #     old perfdata use this option.
 #   - Cluster - removed checks for CPU and MEM
 #     - Both checks were senseless for alarming because there are no thresholds.
-#       A cluster or resource group is a group of Vmware hosts. Not a logical 
+#       A cluster or resource group is a group of Vmware hosts. Not a logical
 #       construct taking parts of the hosts in a resource group in a manner
 #       that several clusters are using the same hosts. So the amount of CPU
 #       and memory of all hosts is the CPU and memory of the cluster. Monitoring
 #       this makes no sense because there are no thresholds for alerting. For
 #       example 50% CPU usage of a cluster can be one host with 90%, and two
 #       with 30% each. With an average of 50% everything seems to be ok but one
-#       machine has definetely a problem. Same for memory. 
+#       machine has definetely a problem. Same for memory.
 #
 # - 21 Aug 2014 M.Fuerstenau version 0.9.19
 #   - host_runtime_info()
@@ -1147,7 +1168,7 @@
 # - 24 Aug 2014 M.Fuerstenau version 0.9.20
 #   - datastore_volumes_info(). Some improvements.
 #     - Output. Because it was hard to see an alerting volume within the mass of others
-#       the output is now grouped so that all alerting volumes are listed on top with 
+#       the output is now grouped so that all alerting volumes are listed on top with
 #       a leading comment. Second are the volumes with no errors. Theses volumes are
 #       seperated by a line and also introduced by a comment.
 #     - New commandline switch --spaceleft.  When checking multiple volumes the threshold
@@ -1188,7 +1209,7 @@
 #       See Readme.
 #     - Added test for session file directory. Thanks Simon.
 #     - Replaced variable $plugin_cache with $sessionfile_dir_def. $plugin_cache was copied from
-#       another plugin of me. But this plugin doesn't  store any data. it was only used to store the 
+#       another plugin of me. But this plugin doesn't  store any data. it was only used to store the
 #       session files (and session file lock files) and therefore the name was misleading.
 #   - host_storage_info()
 #     - Bugfix: Fixed bug in host storage adapter whitelisting.(Simon Meggle)
@@ -1203,13 +1224,13 @@
 #     - New option --showall. Without this only the tool status of machines with problems is listed.
 #     -  Bugfix: "Installed,running,supported and newer than the version available on the host." was set
 #        to warning but this is quit ok.
-#      - In case of a complete runtime check the output is shorted. 
+#      - In case of a complete runtime check the output is shorted.
 #   - vm_net_info()
 #     - Bugfix: Fixed missing semicolon between some perf values and warning threshold.(Simon Meggle)
 #
 # - 31 May 2015 M.Fuerstenau version 0.9.24
 #   - check_vmware_esx.pl:
-#     - Option --statelabels changed from a switch to handing over a value (y or n). This was done as mentioned 
+#     - Option --statelabels changed from a switch to handing over a value (y or n). This was done as mentioned
 #       earlier to fulfill to have the label OK, CRITICAL etc. in plugin output to
 #       fulfill the rules of the plugin developer guidelines. This was proposed by Simon Meggle.
 #       See Readme.
@@ -1217,7 +1238,7 @@
 #
 # - 3 Jun 2015 M.Fuerstenau version 0.9.25
 #   - check_vmware_esx.pl:and dc_runtime_info()
-#     - New optione --open-vm-tools to signalize that Open VM Tools are used and that the 
+#     - New optione --open-vm-tools to signalize that Open VM Tools are used and that the
 #       version of the tools on the host is obsolete.
 #   - dc_runtime_info()
 #     - "VMware Tools is installed, but it is not managed by VMWare" will except the previous point
@@ -1229,13 +1250,147 @@
 #      This was bad because it changed the meaning of the line. Same error in the command reference
 #      because the reference is only the output from the help in a file.
 #
-#- 26 Oct 2015 Raffael Sahli <sahli@gyselroth.com> version 0.9.27
+# - 31 Jul 2015 Markus Frosch
+#   - rewritten session locking behavior, locking is only done when writing a session due
+#     a new login or when no session existed.
+#     Parallel runs with no session will only cause the first process to write a sessionfile.
+#
+#- 26 Oct 2015 Raffael Sahli <sahli@gyselroth.com> version 0.9.26-gr
 #   - Added vm snapshot check
 #
-#- 11 Apr 2017 Raffael Sahli version 0.9.28
+#- 11 Apr 2017 Raffael Sahli version 0.9.26-gr
 #   - -S runtime -s listhost now accept threshold values
-
-use strict;
+#
+#- 19 Sept 2017 Fabian Jucker version 0.9.26-gr
+#   - -S snapshot -s growth to monitor snapshot growth potential
+#
+# - 4 Sep 2018 Ricardo Bartels version 0.9.26.1
+#   - merged session locking behaviour from Markus Frosch
+#
+#   - Use Perl from env instead of a fixed path (Michael Friedrich)
+#     - This allows the plugin to run on any distribution in a yet better way.
+#
+#   - renamed readme -> readme.md (Michael Friedrich)
+#
+#   -  Rewrite documentation for better installation and troubleshooting experience (Michael Friedrich)
+#     - Add About section which explains the purpose of this plugin
+#     - Explain two installation modes
+#     - Move specific explanations into FAQ chapter
+#     - Add a note on VMware API timeouts
+#     - Add some examples and references to Icinga 2 configuration and CheckCommands
+#     - Add chapters similar to known Icinga projects
+#     - Reformat everything as proper Markdown
+#
+#   - make session file usage more robust (Sven Nierlein)
+#     Compare the api returned url and the given url2connect less error prone.
+#     Using --sslport=443 results in a url2connect https://vcenter:443/... while
+#     get_option returns https://vcenter/...
+#     Also it seems like some api returns .../sdk while others return .../sdk/webService
+#     so just ignore that part.
+#     Both leads to not resuing the existing session files.
+#
+#   - added support to query host/datacenter snapshots (Gerhard Lausser)
+#     - List vm's wich have snapshots older or bigger than a certain threshold
+#
+#   - reduce API calls in datastore_volumes_info (Danijel Tasov)
+#     Instead of calling Vim::get_view for each datastore call
+#     Vim::get_views with all of them at once.
+#
+#   - lowercase hostnames in connect urls (Danijel Tasov)
+#     otherwise cookies may not match with LWP
+#
+#   - Fix logic error (Danijel Tasov)
+#     $host_state cannot equal to UP and "Maintenance Mode" at the same time
+#
+#   - increase $unknown on undefined $host_state (Danijel Tasov)
+#
+#   - warn if no volumes match (Danijel Tasov)
+#
+#   - fix bad OUM in vm_disk_io_info (6uellerBpanda)
+#
+#   - A unplugged network interface is considered critical (Ricardo Bartels)
+#
+#   - Be more consistent in return level of maintenance mode (Ricardo Bartels)
+#     only write warning if host runtime is checked with no subselect
+#
+#   - Added option "--ignore_health" to host runtime (all) check
+#     Sometimes not all hardware components are correctly reported via
+#     CIM interface which leads to check errors when checking runtime
+#     status all. This option ignores the health status and prevents the
+#     the plugin from failing to report the overall status of the host.
+#     IMPORTENT: make sure to monitor the host health status separately!
+#     Most likely via ILO/ILOM interface. (Ricardo Bartels)
+#
+#   - declare all file handles as UTF-8 to be able to print multibyte strings
+#     from CIM interface (e.g. snapshot names) (Ricardo Bartels)
+#
+# - 24 May 2019 M.Fuerstenau version 1.0.0
+#   - Merged most pull requests (see 0.9.26.1)
+#   - Bugfix - Back to direct call of the command interpreter in shebang. Using Linux
+#     it normally only possible to one argument. So "/usr/bin/env perl" will
+#     work while "/usr/bin/env perl -w " won't.
+#
+# - 25 May 2019 M.Fuerstenau version 1.1.0
+#   - Merged most pull requests (see 0.9.26.1)
+#
+#   - New option  --maintenance_mode_state. Sets status in case ESX host is in maintenance
+#     mode.
+#
+#     Possible values are:
+#     OK or ok
+#     CRITICAL or critical or CRIT or crit
+#     WARNING or warning or WARN or warn
+#
+#     Default is UNKNOWN. Values are case insensitve.
+#
+#   - Renamed exit_error to exit_unknown because it exits with 3 and not with 2 or 1
+#
+#   - Moved exit_unknown(), debug() and save_session() before the cluster sub routines because
+#     the cluster part is unfinished.
+#
+#   - Some minor reformatting of code.
+#
+#
+# - 25 May 2019 M.Fuerstenau version 1.1.1
+#   - Added modified SSL certificate validation by Justin Michael
+#
+# - 26 May 2019 M.Fuerstenau version 1.2.0
+#   - Merged:
+#      - 25 May 2019 Ricardo Bartels
+#        - request ESXi host or vCenter version trough runtime
+#        - add feature to request licenses informations from host or vCenter
+#   - Bugfix
+#     - An option --open_vm_tools_okto give OK instead of UNKNOWN was added
+#       in 2015(!) but only for dc_runtime_info() but not for vm_runtime_info().
+#       It was also not part of help() or the command reference. Fixed.
+#   - Reformatted code of system_license_info()
+#     - Corresponding braces and brackets shouldbe in the same column.
+#       This makes reading of the code easier.
+#     - Same for unified indentions
+#     - Function calls should not be spread over several lines exept you have
+#       clean indentions. Also for better readability.
+#     - Replaced "elsif" by "else if" also for clean indention and ....
+#     - New option --no_vm_tools_ok. It maybe for some reasons that you
+#       have virtual machines without VMware tools. This should not cause an alarm.
+#   - New option --unplugged_nics_state. Sets status for unplugged nics. This option
+#     replaces hardcoded set to critical by Ricardo Bartels
+#
+#     Possible values are:
+#     OK or ok
+#     CRITICAL or critical or CRIT or crit
+#     WARNING or warning or WARN or warn
+#
+#     Default is WARNING. Values are case insensitve.
+#
+# - 1 Jun 2019 M.Fuerstenau version 1.2.1
+#   - Added some fixes from Ricardo Bartels
+#     - fixed dates, names and typos in recent release notes
+#     - documented/renamed new option unconnected_nics to unplugged_nics_state
+#     - fix option maintenance_mode_state, now passed on to all host modules
+#       (Thx to Ricardo to correct my lousy "middle-in-thenight-work - Martin)
+#   - Added fix from Claudio Kuenzler
+#     - Corrected perf data on net checks
+#   - Replace elsif by else ...if in datastore_volumes_info()
 
 use strict;
 use warnings;
@@ -1255,7 +1410,16 @@ use datastore_volumes_info;
 
 # Prevent SSL certificate validation
 
-$ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0; 
+#$ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+BEGIN {
+    $ENV{'PERL_LWP_SSL_VERIFY_HOSTNAME'} = 0;
+    eval {
+        # required for new IO::Socket::SSL versions
+        require IO::Socket::SSL;
+        IO::Socket::SSL->import();
+        IO::Socket::SSL::set_ctx_defaults( SSL_verify_mode => 0 );
+    };
+};
 
 if ( $@ )
    {
@@ -1270,18 +1434,20 @@ if ( $@ )
 $SIG{ALRM} = 'catch_alarm';
 $SIG{INT}  = 'catch_intterm';
 $SIG{TERM} = 'catch_intterm';
- 
+
+# define alle file handles as UTF-8
+use open qw(:std :utf8);
 
 #--- Start presets and declarations -------------------------------------
 # 1. Define variables
 
 # General stuff
 our $version;                                  # Only for showing the version
-our $prog_version = '0.9.27';                  # Contains the program version number
+our $prog_version = '1.2.1-gr';                   # Contains the program version number
 our $ProgName = basename($0);
 
 my  $PID = $$;                                 # Stores the process identifier of the actual run. This will be
-                                               # be stored in the lock file. 
+                                               # be stored in the lock file.
 my  $PID_exists;                               # For testing for the process that wrote the lock file the last time
 my  $PID_old;                                  # PID read from lock file
 
@@ -1294,7 +1460,6 @@ my  $password;                                 # Password for vmware host or vsp
 my  $authfile;                                 # If username/password should read from a file ....
 my  $sessionfile_name;                         # Contains the name of the sessionfile if a
                                                # a sessionfile is used for faster authentication
-my  $sessionlockfile;                          # Lockfile to protect the session
 my  $sessionfile_dir;                          # Optinal. Contains the path to the sessionfile. Used in conjunction
                                                # with sessionfile
 my  $nosession;                                # Just a flag to avoid using a sessionfile
@@ -1304,6 +1469,22 @@ our $host;                                     # Name of the vmware server
 my  $cluster;                                  # Name of the monitored cluster
 our $datacenter;                               # Name of the vCenter server
 our $vmname;                                   # Name of the virtual machine
+
+my  $unplugged_nics_state;                     # Which state should be deliverd in state of unconnected nics?
+
+                                               # Possible values are
+                                               # OK or ok
+                                               # CRITICAL or critical or CRIT or crit
+                                               # WARNING or warning or WARN or warn
+my  $unplugged_nics_state_def="warning";       # Default status for unconnected nics?
+
+my  $maintenance_mode_state;                   # Status in case ESX host is in maintenance mode
+
+                                               # Possible values are
+                                               # OK or ok
+                                               # CRITICAL or critical or CRIT or crit
+                                               # WARNING or warning or WARN or warn
+my  $maintenance_mode_state_def="unknown";     # Default status for maintenance mode
 
 my  $output;                                   # Contains the output string
 my  $values;
@@ -1334,19 +1515,20 @@ our $crit_is_percent;                          # Flag. If it is set to one criti
 our $warn_is_percent;                          # Flag. If it is set to one warning threshold is percent.
 my  $thresholds_given = 0;                     # During checking the threshold it will be set to one. Only if
                                                # it is set we will check the threshold against warning or critical
-                                        
+
 our $spaceleft;                                # This is used for datastore volumes. When checking multiple volumes
                                                # the threshol must be given in either percent or space left on device.
 my  $sessionfile_dir_def="/tmp/";              # Directory for caching the session files and sessionfile lock files
-                                               # Good idea to use a tmpfs because it speeds up operation    
+                                               # Good idea to use a tmpfs because it speeds up operation
 
 our $listsensors;                              # This flag set in conjunction with -l runtime -s health or -s sensors
                                                # will list all sensors
+our $ignorehealth;                             # ignore health issues when requesting runtime informations
 our $usedspace;                                # Show used spaced instead of free
 our $gigabyte;                                 # Output in gigabyte instead of megabyte
 our $perf_free_space;                          # To display perfdata as free space instead of used when using
                                                # --usedspace
-                                               
+
 our $alertonly;                                # vmfs - list only alerting volumes
 
 our $blacklist;                                # Contains the blacklist
@@ -1362,7 +1544,9 @@ my  $mon;                                      # Month        - used for some da
 my  $year;                                     # Year         - used for some date functions
 
 my  $timeout = 90;                             # Time in seconds befor the plugin kills itself when it' not ready
-my  $ms_ts = 1500;                             # Milliseconds to sleep for waiting for accessing the lockfile.
+my  $DEBUG = 0;                                # global switch for debugging
+
+my  $program_start = time();                   # record the program_start
 
 # Output options
 our $multiline;                                # Multiline output in overview. This mean technically that
@@ -1391,13 +1575,15 @@ my $statelabels_def="y";                       # Default value for state labels 
                                                # set this default to "n".
 my $statelabels;                               # To overwrite $statelabels_def via commandline.
 our $openvmtools;                              # Signalize that you use Open VM Tools instead of the servers one.
+our $no_vmtools;                                # Signalize that not having VMware tools is ok
+our $hidekey;                                  # Hide licenses key when requesting license informations
 
 
 
 my  $trace;
 
 
-# 2. Define arrays and hashes  
+# 2. Define arrays and hashes
 
 # The same as in Nagios::plugin::functions but it is ridiculous to buy a truck for a
 # "one time one box" transportations job.
@@ -1418,44 +1604,51 @@ $NoA=$#ARGV;
 
 Getopt::Long::Configure('bundling');
 GetOptions
-	("h:s" => \$help,                "help:s"           => \$help,
-	 "H=s" => \$host,                "host=s"           => \$host,
-	 "C=s" => \$cluster,             "cluster=s"        => \$cluster,
-	 "D=s" => \$datacenter,          "datacenter=s"     => \$datacenter,
-	 "w=s" => \$warning,             "warning=s"        => \$warning,
-	 "c=s" => \$critical,            "critical=s"       => \$critical,
-	 "N=s" => \$vmname,              "name=s"           => \$vmname,
-	 "u=s" => \$username,            "username=s"       => \$username,
-	 "p=s" => \$password,            "password=s"       => \$password,
-	 "f=s" => \$authfile,            "authfile=s"       => \$authfile,
-	 "S=s" => \$select,              "select=s"         => \$select,
-	 "s=s" => \$subselect,           "subselect=s"      => \$subselect,
-	                                 "sessionfile=s"    => \$sessionfile_name,
-	                                 "sessionfiledir=s" => \$sessionfile_dir,
-	                                 "nosession"        => \$nosession,
-	 "B=s" => \$blacklist,           "exclude=s"        => \$blacklist,
-	 "W=s" => \$whitelist,           "include=s"        => \$whitelist,
-         "t=s" => \$timeout,             "timeout=s"        => \$timeout,
-	                                 "ignore_unknown"   => \$ignoreunknown,
-	                                 "ignore_warning"   => \$ignorewarning,
-	                                 "trace=s"          => \$trace,
-                                         "listsensors"      => \$listsensors,
-                                         "usedspace"        => \$usedspace,
-                                         "perf_free_space"  => \$perf_free_space,
-                                         "alertonly"        => \$alertonly,
-                                         "multiline"        => \$multiline,
-                                         "isregexp"         => \$isregexp,
-                                         "listall"          => \$listall,
-                                         "poweredonly"      => \$vm_tools_poweredon_only,
-                                         "showall"          => \$showall,
-                                         "standbyok"        => \$standbyok,
-                                         "sslport=s"        => \$sslport,
-                                         "gigabyte"         => \$gigabyte,
-                                         "nostoragestatus"  => \$nostoragestatus,
-                                         "statelabels"      => \$statelabels,
-                                         "open-vm-tools"    => \$openvmtools,
-                                         "spaceleft"        => \$spaceleft,
-	 "V"   => \$version,             "version"          => \$version);
+	("h:s" => \$help,                "help:s"                   => \$help,
+	 "H=s" => \$host,                "host=s"                   => \$host,
+	 "C=s" => \$cluster,             "cluster=s"                => \$cluster,
+	 "D=s" => \$datacenter,          "datacenter=s"             => \$datacenter,
+	 "w=s" => \$warning,             "warning=s"                => \$warning,
+	 "c=s" => \$critical,            "critical=s"               => \$critical,
+	 "N=s" => \$vmname,              "name=s"                   => \$vmname,
+	 "u=s" => \$username,            "username=s"               => \$username,
+	 "p=s" => \$password,            "password=s"               => \$password,
+	 "f=s" => \$authfile,            "authfile=s"               => \$authfile,
+	 "S=s" => \$select,              "select=s"                 => \$select,
+	 "s=s" => \$subselect,           "subselect=s"              => \$subselect,
+	                                 "sessionfile=s"            => \$sessionfile_name,
+	                                 "sessionfiledir=s"         => \$sessionfile_dir,
+	                                 "nosession"                => \$nosession,
+	 "B=s" => \$blacklist,           "exclude=s"                => \$blacklist,
+	 "W=s" => \$whitelist,           "include=s"                => \$whitelist,
+         "t=s" => \$timeout,             "timeout=s"                => \$timeout,
+	                                 "ignore_unknown"           => \$ignoreunknown,
+	                                 "ignore_warning"           => \$ignorewarning,
+	                                 "trace=s"                  => \$trace,
+                                         "listsensors"              => \$listsensors,
+                                         "ignore_health"            => \$ignorehealth,
+                                         "usedspace"                => \$usedspace,
+                                         "perf_free_space"          => \$perf_free_space,
+                                         "alertonly"                => \$alertonly,
+                                         "multiline"                => \$multiline,
+                                         "isregexp"                 => \$isregexp,
+                                         "listall"                  => \$listall,
+                                         "poweredonly"              => \$vm_tools_poweredon_only,
+                                         "showall"                  => \$showall,
+                                         "standbyok"                => \$standbyok,
+                                         "sslport=s"                => \$sslport,
+                                         "gigabyte"                 => \$gigabyte,
+                                         "nostoragestatus"          => \$nostoragestatus,
+                                         "statelabels"              => \$statelabels,
+                                         "open_vm_tools_ok"         => \$openvmtools,
+                                         "no_vm_tools_ok"           => \$no_vmtools,
+                                         "hidekey"                  => \$hidekey,
+                                         "spaceleft"                => \$spaceleft,
+                                         "maintenance_mode_state=s" => \$maintenance_mode_state,
+                                         "unplugged_nics_state=s"   => \$unplugged_nics_state,
+         "V"   => \$version,             "version"                  => \$version,
+         "d|debug" => \$DEBUG,
+);
 
 # Show version
 if ($version)
@@ -1509,6 +1702,75 @@ if ($timeout)
 $output = "Unknown ERROR!";
 $result = 2;
 
+# Set exit code for checks when in maintenance mode
+if (!(defined($maintenance_mode_state)))
+   {
+   $maintenance_mode_state=$maintenance_mode_state_def;
+   }
+
+# We are using regex instead of a simple compare to be fault tolerant
+if ($maintenance_mode_state =~ m/^ok.*$/i)
+   {
+   $maintenance_mode_state = 0;
+   }
+else
+   {
+   if ($maintenance_mode_state =~ m/^wa.*$/i)
+      {
+      $maintenance_mode_state = 1;
+      }
+   else
+      {
+      if ($maintenance_mode_state =~ m/^cr.*$/i)
+         {
+         $maintenance_mode_state = 2;
+         }
+      else
+         {
+         if ($maintenance_mode_state =~ m/^un.*$/i)
+            {
+            $maintenance_mode_state = 3;
+            }
+         else
+            {
+            print "Error: Unknown exit status for checks when in maintenance mode. Please check.\n";
+            exit 2;
+            }
+         }
+      }
+   }
+
+# Set state for unconnected nics
+if (!(defined($unplugged_nics_state)))
+   {
+   $unplugged_nics_state=$unplugged_nics_state_def;
+   }
+
+# We are using regex instead of a simple compare to be fault tolerant
+if ($unplugged_nics_state =~ m/^ok.*$/i)
+   {
+   $unplugged_nics_state = 0;
+   }
+else
+   {
+   if ($unplugged_nics_state =~ m/^wa.*$/i)
+      {
+      $unplugged_nics_state = 1;
+      }
+   else
+      {
+      if ($unplugged_nics_state =~ m/^cr.*$/i)
+         {
+         $unplugged_nics_state = 2;
+         }
+      else
+         {
+         print "Error: Unknown states for unconnected nics. Please check.\n";
+         exit 2;
+         }
+      }
+   }
+
 # Check $subselect and if defined set it to upper case letters
 if (defined($subselect))
    {
@@ -1516,7 +1778,7 @@ if (defined($subselect))
       {
       $subselect = undef;
       }
-      else
+   else
       {
       if ( $select ne "volumes")
          {
@@ -1543,7 +1805,7 @@ if (defined($warning))
       if ($warning =~ m/^[0-9]+$/)
          {
          $thresholds_given = 1;
-         
+
          # If percent check a valid range
          if ($warn_is_percent eq 1)
             {
@@ -1621,7 +1883,7 @@ if (defined($authfile))
          print "Unable to open auth file \"$authfile\"\n";
          exit 3;
          }
-   
+
    while ( <AUTH_FILE> )
          {
          if (s/^[ \t]*username[ \t]*=//)
@@ -1646,13 +1908,13 @@ if (defined($authfile))
 
 if (defined($datacenter))
    {
-   $url2connect = $datacenter;
+   $url2connect = lc($datacenter);
    }
 else
    {
    if (defined($host))
       {
-      $url2connect = $host;
+      $url2connect = lc($host);
       }
    else
       {
@@ -1696,19 +1958,19 @@ if (!defined($nosession))
          $sessionfile_name = $host . "_session";
          }
       }
-      
-   
+
+
    # Set default best location for sessionfile_dir_def in this environment
-   if ( $ENV{OMD_ROOT}) 
+   if ( $ENV{OMD_ROOT})
       {
       $sessionfile_dir_def = $ENV{OMD_ROOT} . "/var/check_vmware_esx/";
-      if ( ! -d $sessionfile_dir_def ) 
+      if ( ! -d $sessionfile_dir_def )
          {
-         unless (mkdir $sessionfile_dir_def) 
+         unless (mkdir $sessionfile_dir_def)
             {
             die(sprintf "UNKNOWN: Unable to create sessionfile_dir_def directory %s.", $sessionfile_dir_def);
             }
-         } 
+         }
       }
 
    if (defined($sessionfile_dir))
@@ -1721,81 +1983,33 @@ if (!defined($nosession))
       {
       $sessionfile_name = $sessionfile_dir_def . $sessionfile_name;
       }
-   
-   unless (-d $sessionfile_dir_def) 
+
+   unless (-d $sessionfile_dir_def)
           {
           die(sprintf "UNKNOWN: sessionfile_dir_def directory %s does not exist.", $sessionfile_dir_def);
           }
 
-   $sessionlockfile = $sessionfile_name . "_locked";
-   
    if ( -e $sessionfile_name )
       {
-      usleep(int(rand($ms_ts)) * 1000);
-      
-      if ( -e $sessionlockfile )
-         {
-         # Session locked? First open the lock file for reading
-         unless(open SESSION_LOCK_FILE, '<', $sessionlockfile)
-               {
-               print "Unable to open session lock file \"$sessionlockfile\"\n";
-               exit 3;
-               }
-         # Second get the old PID
-         while(<SESSION_LOCK_FILE>)
-              {
-              $PID_old = $_;
-              }
-         close (SESSION_LOCK_FILE);    
-      
-         # Third - check for the process which wrote the lock file the last time
-         $PID_exists = kill 0, $PID_old;
-         
-         # Fourth - if the process is not available any more remove the lock file
-         if ( !$PID_exists )
-            {
-            unlink $sessionlockfile;
-            }
-         }
-   
-      # Now we are sure that we have no dead lock file and we will wait for free session
-      while ( -e $sessionlockfile )
-            {
-            usleep(int(rand($ms_ts)) * 1000);
-            }
-   
-      unless(open SESSION_LOCK_FILE, '>', $sessionlockfile)
-            {
-            print "Unable to create session lock file \"$sessionlockfile\"\n";
-            exit 3;
-            }
-      print SESSION_LOCK_FILE "$PID\n"; 
-      close (SESSION_LOCK_FILE);    
-   
+      debug("Trying to resume existing session from '%s'", $sessionfile_name);
+
       eval {Vim::load_session(session_file => $sessionfile_name)};
-      if (($@ ne '') || (Opts::get_option("url") ne $url2connect))
+      if (($@ ne '') || (trim_connect_url(Opts::get_option("url")) ne trim_connect_url($url2connect)))
          {
-         unlink $sessionfile_name;
+         debug("session resume failed, logging in at %s as %s", $url2connect, $username);
          Util::connect($url2connect, $username, $password);
-         Vim::save_session(session_file => $sessionfile_name);
-         }
-      else
-         {
-         Vim::load_session(session_file => $sessionfile_name);
+
+         save_session($sessionfile_name);
          }
       }
    else
       {
-      unless(open SESSION_LOCK_FILE, '>', $sessionlockfile)
-            {
-            print "Unable to create session lock file \"$sessionlockfile\"\n";
-            exit 3;
-            }
-      print SESSION_LOCK_FILE "$PID\n"; 
-      close (SESSION_LOCK_FILE);    
-   
+      debug("sessionfile '%s' does not exist", $sessionfile_name);
+
+      debug("logging in at %s as %s", $url2connect, $username);
       Util::connect($url2connect, $username, $password);
-      Vim::save_session(session_file => $sessionfile_name);
+
+      save_session($sessionfile_name);
       }
    }
 else
@@ -1839,7 +2053,6 @@ if ($@)
 if (defined($sessionfile_name) and -e $sessionfile_name)
    {
    Vim::unset_logout_on_disconnect();
-   unlink $sessionlockfile;
    }
 else
    {
@@ -1894,8 +2107,8 @@ else
    {
    $statelabels = $statelabels_def;
    }
-   
-   
+
+
 if ( $result == 0 )
    {
    if ($statelabels eq "y")
@@ -2044,10 +2257,10 @@ sub main_select
 
     if (defined($host))
        {
-       # The following if black is only needed if we check a ESX server via the 
+       # The following if black is only needed if we check a ESX server via the
        # the datacenten (vsphere server) instead of doing it directly.
        # Directly is better
-       
+
        my $esx_server;
        if (defined($datacenter))
           {
@@ -2057,42 +2270,42 @@ sub main_select
           {
           require host_cpu_info;
           import host_cpu_info;
-          ($result, $output) = host_cpu_info($esx_server);
+          ($result, $output) = host_cpu_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "mem")
           {
           require host_mem_info;
           import host_mem_info;
-          ($result, $output) = host_mem_info($esx_server);
+          ($result, $output) = host_mem_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "net")
           {
           require host_net_info;
           import host_net_info;
-          ($result, $output) = host_net_info($esx_server);
+          ($result, $output) = host_net_info($esx_server, $maintenance_mode_state, $unplugged_nics_state);
           return($result, $output);
           }
        if ($select eq "io")
           {
           require host_disk_io_info;
           import host_disk_io_info;
-          ($result, $output) = host_disk_io_info($esx_server);
+          ($result, $output) = host_disk_io_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "volumes")
           {
           require host_list_vm_volumes_info;
           import host_list_vm_volumes_info;
-          ($result, $output) = host_list_vm_volumes_info($esx_server);
+          ($result, $output) = host_list_vm_volumes_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "runtime")
           {
           require host_runtime_info;
           import host_runtime_info;
-          ($result, $output) = host_runtime_info($esx_server);
+          ($result, $output) = host_runtime_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        # service OR services because I always type the wrong one :-)) - M.Fuerstenau
@@ -2100,33 +2313,47 @@ sub main_select
           {
           require host_service_info;
           import host_service_info;
-          ($result, $output) = host_service_info($esx_server);
+          ($result, $output) = host_service_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "storage")
           {
           require host_storage_info;
           import host_storage_info;
-          ($result, $output) = host_storage_info($esx_server, $blacklist);
+          ($result, $output) = host_storage_info($esx_server, $blacklist, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "uptime")
           {
           require host_uptime_info;
           import host_uptime_info;
-          ($result, $output) = host_uptime_info($esx_server);
+          ($result, $output) = host_uptime_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "hostmedia")
           {
           require host_mounted_media_info;
           import host_mounted_media_info;
-          ($result, $output) = host_mounted_media_info($esx_server);
+          ($result, $output) = host_mounted_media_info($esx_server, $maintenance_mode_state);
           return($result, $output);
           }
        if ($select eq "soap")
           {
           ($result, $output) = soap_check();
+          return($result, $output);
+          }
+       if ($select eq "snapshots")
+          {
+          require host_snapshot_info;
+          import host_snapshot_info;
+          ($result, $output) = host_snapshot_info($esx_server, $maintenance_mode_state);
+          return($result, $output);
+          }
+       if ($select eq "license")
+          {
+          require system_license_info;
+          import system_license_info;
+          ($result, $output) = system_license_info($esx_server);
           return($result, $output);
           }
 
@@ -2182,17 +2409,31 @@ sub main_select
           ($result, $output) = soap_check();
           return($result, $output);
           }
+       if ($select eq "snapshots")
+          {
+          require dc_snapshot_info;
+          import dc_snapshot_info;
+          ($result, $output) = dc_snapshot_info();
+          return($result, $output);
+          }
+       if ($select eq "license")
+          {
+          require system_license_info;
+          import system_license_info;
+          ($result, $output) = system_license_info();
+          return($result, $output);
+          }
 
        get_me_out("Unknown datacenter select");
        }
     get_me_out("You should never end here. Totally unknown anything.");
     }
-    
+
 sub check_against_threshold
     {
     my $check_result = shift(@_);
     my $return_state = 0;
- 
+
 
     if ((defined($warning)) && (defined($critical)))
        {
@@ -2239,7 +2480,7 @@ sub check_against_threshold
        }
     return $return_state;
     }
-    
+
 sub check_state
     {
     if (grep { $_ == 2 } @_)
@@ -2295,7 +2536,7 @@ sub convert_number
           $value = pop(@vals);
           $value =~ s/^\s+//;
           $value =~ s/\s+$//;
-          
+
           if (defined($value) && $value ne '')
              {
              if ($value >= 0)
@@ -2309,6 +2550,14 @@ sub convert_number
              }
           }
     return $state;
+    }
+
+sub trim_connect_url
+    {
+    my($url) = @_;
+    $url =~ s/:443//gmx;
+    $url =~ s/\/webService$//gmx;
+    return($url);
     }
 
 sub check_health_state
@@ -2325,7 +2574,7 @@ sub check_health_state
        {
        $state = 1;
        }
- 
+
     if (lc($actual_state) eq "red")
        {
        $state = 2;
@@ -2393,7 +2642,7 @@ sub soap_check
     {
     my $output = 'Fatal error: could not connect to the VMWare SOAP API.';
     my $state = Vim::get_vim_service();
-    
+
     if (defined($state))
        {
        $state=0;
@@ -2413,7 +2662,7 @@ sub isblacklisted
     my @blacklist;
     my $blacklist;
     my $hitcount = 0;
-    
+
     if (!defined $$blacklist_ref)
        {
        return 0;
@@ -2489,7 +2738,7 @@ sub get_me_out
     print_help();
     exit 2;
     }
-    
+
 # Catching some signals
 sub catch_alarm
     {
@@ -2500,19 +2749,63 @@ sub catch_alarm
 sub catch_intterm
     {
     print "UNKNOWN: Script killed by monitor.\n";
-    unlink $sessionlockfile;
     exit 3;
     }
- 
+
+sub exit_unknown
+    {
+    my $message = shift;
+    printf "$message\n", @_;
+    exit 3;
+    }
+
+sub debug
+    {
+    unless ($DEBUG) { return; }
+    my $message = shift;
+    printf "$message\n", @_;
+    }
+
+sub save_session
+    {
+    my $sessionfile = shift
+        or exit_unknown("save_session needs a parameter!");
+    my $lock = $sessionfile . "_locked";
+    my $fh;
+    my $mtime;
+
+    if (-e $sessionfile)
+       {
+       $mtime = (stat($sessionfile))[9];
+       if ($mtime > $program_start)
+          {
+          debug("Not saving session, session file '%s' is newer than program start!", $sessionfile);
+          return;
+          }
+       }
+
+    open $fh, '>', $lock
+        or exit_unknown "Unable to create session lock file '%s'!", $lock;
+
+    flock $fh, 2
+        or exit_unknown "could not lock '$lock'!";
+
+    debug("Saving session to '%s'", $sessionfile);
+    Vim::save_session(session_file => $sessionfile);
+
+    close $fh;
+    unlink $lock;
+    }
+
 #=====================================================================| Cluster |============================================================================#
 
 sub cluster_cluster_info
 {
         my ($cluster) = @_;
-         
+
         my $state = 2;
         my $output = 'CLUSTER clusterServices Unknown error';
-        
+
         if (defined($subselect))
         {
                 if ($subselect eq "effectivecpu")
@@ -2522,7 +2815,7 @@ sub cluster_cluster_info
                         {
                                 my $value = simplify_number(convert_number($$values[0][0]->value) * 0.01);
                                 $perfdata = $perfdata . " effective cpu=" . $value . "Mhz;" . $perf_thresholds . ";;";
-                                $output = "effective cpu=" . $value . "%"; 
+                                $output = "effective cpu=" . $value . "%";
                                 $state = check_against_threshold($value);
                         }
                 }
@@ -2682,8 +2975,9 @@ sub cluster_runtime_info
                         foreach my $host (@$host_views) {
                                 $host->update_view_data(['name', 'runtime.powerState']);
                                 my $host_state = $host_state_strings{$host->get_property('runtime.powerState')->val};
+                                $unknown += !defined($host_state);
                                 $unknown += $host_state eq "3";
-                                if ($host_state eq "UP" && $host_state eq "Maintenance Mode") {
+                                if ($host_state eq "UP" || $host_state eq "Maintenance Mode") {
                                         $up++;
                                         $output = $output . $host->name . "(UP), ";
                                 } else
@@ -2790,7 +3084,3 @@ sub cluster_runtime_info
 
         return ($state, $output);
 }
-
-
-
-
